@@ -17,10 +17,15 @@
 
 package org.apache.skywalking.apm.plugin.tablestore;
 
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.skywalking.apm.agent.core.plugin.interceptor.ConstructorInterceptPoint;
 import org.apache.skywalking.apm.agent.core.plugin.interceptor.InstanceMethodsInterceptPoint;
 import org.apache.skywalking.apm.agent.core.plugin.interceptor.enhance.ClassInstanceMethodsEnhancePluginDefine;
 import org.apache.skywalking.apm.agent.core.plugin.match.ClassMatch;
+import org.apache.skywalking.apm.agent.core.plugin.match.NameMatch;
+
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
 /**
  * @author 龙也
@@ -28,9 +33,13 @@ import org.apache.skywalking.apm.agent.core.plugin.match.ClassMatch;
  */
 public class TablestoreInstrumentation extends ClassInstanceMethodsEnhancePluginDefine {
 
+  private static final String ENHANCE_CLASS = "com.alicloud.openservices.tablestore.SyncClient";
+  private static final String INTERCEPT_CLASS =
+      "org.apache.skywalking.apm.plugin.tablestore.TablestoreInterceptor";
+
   @Override
   protected ClassMatch enhanceClass() {
-    return null;
+    return NameMatch.byName(ENHANCE_CLASS);
   }
 
   @Override
@@ -40,6 +49,70 @@ public class TablestoreInstrumentation extends ClassInstanceMethodsEnhancePlugin
 
   @Override
   public InstanceMethodsInterceptPoint[] getInstanceMethodsInterceptPoints() {
-    return new InstanceMethodsInterceptPoint[0];
+
+    return new InstanceMethodsInterceptPoint[] {
+      new InstanceMethodsInterceptPoint() {
+
+        @Override
+        public ElementMatcher<MethodDescription> getMethodsMatcher() {
+          return named("setExtraHeaders")
+              .or(named("getEndpoint"))
+              .or(named("getInstanceName"))
+              .or(named("createTable"))
+              .or(named("listTable"))
+              .or(named("describeTable"))
+              .or(named("deleteTable"))
+              .or(named("updateTable"))
+              .or(named("createIndex"))
+              .or(named("deleteIndex"))
+              .or(named("addDefinedColumn"))
+              .or(named("deleteDefinedColumn"))
+              .or(named("getRow"))
+              .or(named("putRow"))
+              .or(named("updateRow"))
+              .or(named("deleteRow"))
+              .or(named("batchGetRow"))
+              .or(named("batchWriteRow"))
+              .or(named("bulkImport"))
+              .or(named("getRange"))
+              .or(named("bulkExport"))
+              .or(named("computeSplitsBySize"))
+              .or(named("createRangeIterator"))
+              .or(named("createBulkExportIterator"))
+              .or(named("createWideColumnIterator"))
+              .or(named("listStream"))
+              .or(named("describeStream"))
+              .or(named("getShardIterator"))
+              .or(named("getStreamRecord"))
+              .or(named("createSearchIndex"))
+              .or(named("updateSearchIndex"))
+              .or(named("listSearchIndex"))
+              .or(named("deleteSearchIndex"))
+              .or(named("describeSearchIndex"))
+              .or(named("computeSplits"))
+              .or(named("parallelScan"))
+              .or(named("createParallelScanIterator"))
+              .or(named("search"))
+              .or(named("startLocalTransaction"))
+              .or(named("commitTransaction"))
+              .or(named("abortTransaction"))
+              .or(named("createDeliveryTask"))
+              .or(named("deleteDeliveryTask"))
+              .or(named("describeDeliveryTask"))
+              .or(named("listDeliveryTask"))
+              .or(named("sqlQuery"));
+        }
+
+        @Override
+        public String getMethodsInterceptor() {
+          return INTERCEPT_CLASS;
+        }
+
+        @Override
+        public boolean isOverrideArgs() {
+          return false;
+        }
+      }
+    };
   }
 }
